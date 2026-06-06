@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Did They Vote? — 2024 Election Guessing Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --blue: #185FA5;
+  --blue-light: #E6F1FB;
+  --blue-mid: #85B7EB;
+  --red: #A32D2D;
+  --red-light: #FCEBEB;
+  --red-mid: #F09595;
+  --green-light: #EAF3DE;
+  --green: #3B6D11;
+  --gray-50: #F8F7F4;
+  --gray-100: #EEECEA;
+  --gray-200: #D8D6D2;
+  --gray-400: #9B9893;
+  --gray-700: #484642;
+  --gray-900: #1C1B19;
+  --text: #1C1B19;
+  --text-muted: #6B6966;
+  --text-hint: #9B9893;
+  --border: rgba(0,0,0,0.1);
+  --border-strong: rgba(0,0,0,0.18);
+  --surface: #FFFFFF;
+  --bg: #F3F1EE;
+  --radius: 10px;
+  --radius-lg: 14px;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 2rem 1rem 4rem;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  max-width: 560px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-hint);
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+
+h1 {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(28px, 5vw, 40px);
+  font-weight: 400;
+  line-height: 1.15;
+  color: var(--gray-900);
+  margin-bottom: 10px;
+}
+
+h1 em {
+  font-style: italic;
+  color: var(--blue);
+}
+
+.sub {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-weight: 300;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.game-container {
+  max-width: 580px;
+  margin: 0 auto;
+}
+
+.score-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.score-pill {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  text-align: center;
+}
+
+.score-pill .slabel {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-hint);
+  font-weight: 500;
+  margin-bottom: 3px;
+}
+
+.score-pill .sval {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.round-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.round-num {
+  font-size: 12px;
+  color: var(--text-hint);
+  font-weight: 500;
+}
+
+.progress-bar {
+  height: 3px;
+  background: var(--gray-100);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--gray-700);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.card {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  margin-bottom: 12px;
+}
+
+.place-name {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--gray-900);
+  line-height: 1.2;
+  margin-bottom: 3px;
+}
+
+.place-state {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+  font-weight: 300;
+}
+
+.blurb-wrap {
+  margin-bottom: 1rem;
+  min-height: 44px;
+}
+
+.blurb-text {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  font-weight: 300;
+  font-style: italic;
+  border-left: 2px solid var(--gray-200);
+  padding-left: 10px;
+}
+
+.blurb-loading {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 0 6px;
+}
+
+.blurb-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gray-300, #c8c6c2);
+  animation: blink 1.2s infinite;
+}
+.blurb-dot:nth-child(2) { animation-delay: 0.2s; }
+.blurb-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes blink {
+  0%, 80%, 100% { opacity: 0.25; }
+  40% { opacity: 1; }
+}
+
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.stat {
+  background: var(--gray-50);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+}
+
+.stat.wide { grid-column: span 2; }
+
+.stat-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-hint);
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.stat-val {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.race-bar-wrap { margin-top: 6px; }
+
+.race-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+  font-size: 12px;
+}
+
+.race-name {
+  width: 78px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.race-track {
+  flex: 1;
+  height: 7px;
+  background: var(--gray-200);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.race-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--gray-700);
+  transition: width 0.5s ease;
+}
+
+.race-pct {
+  width: 32px;
+  text-align: right;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.margin-section {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 12px;
+}
+
+.margin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.margin-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.margin-val {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: var(--gray-200);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--gray-900);
+  cursor: pointer;
+  border: 3px solid var(--surface);
+  box-shadow: 0 0 0 1px var(--border-strong);
+}
+
+input[type=range]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--gray-900);
+  cursor: pointer;
+  border: 3px solid var(--surface);
+  box-shadow: 0 0 0 1px var(--border-strong);
+}
+
+.choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.choice-btn {
+  padding: 16px 10px;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--border-strong);
+  background: var(--surface);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  transition: all 0.12s;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.choice-btn .party-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.65;
+  margin-top: 2px;
+}
+
+.choice-btn:hover:not(:disabled) {
+  background: var(--gray-50);
+  border-color: var(--gray-400);
+  transform: translateY(-1px);
+}
+
+.choice-btn:active:not(:disabled) { transform: translateY(0); }
+
+.choice-btn.harris { border-color: #B5D4F4; color: var(--blue); }
+.choice-btn.trump  { border-color: #F7C1C1; color: var(--red); }
+.choice-btn.harris:hover:not(:disabled) { background: var(--blue-light); border-color: var(--blue-mid); }
+.choice-btn.trump:hover:not(:disabled)  { background: var(--red-light); border-color: var(--red-mid); }
+
+.choice-btn.correct-h { background: var(--blue); color: #fff; border-color: var(--blue); }
+.choice-btn.correct-t { background: var(--red);  color: #fff; border-color: var(--red); }
+.choice-btn.wrong-h, .choice-btn.wrong-t { opacity: 0.35; }
+.choice-btn:disabled { cursor: default; transform: none; }
+
+.result-box {
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  border: 0.5px solid;
+}
+
+.result-box.correct {
+  background: var(--green-light);
+  border-color: #C0DD97;
+  color: var(--green);
+}
+
+.result-box.wrong {
+  background: var(--red-light);
+  border-color: var(--red-mid);
+  color: var(--red);
+}
+
+.result-headline {
+  font-size: 15px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.result-detail {
+  font-size: 13px;
+  opacity: 0.8;
+  line-height: 1.5;
+}
+
+.next-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius-lg);
+  border: 0.5px solid var(--border-strong);
+  background: var(--gray-900);
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.12s, transform 0.12s;
+}
+
+.next-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+.next-btn:active { transform: translateY(0); }
+
+.hint-text {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-hint);
+  margin-top: 8px;
+}
+
+.final-wrap {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem 2rem;
+  text-align: center;
+}
+
+.final-grade {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 72px;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--gray-900);
+  margin: 12px 0;
+}
+
+.final-score {
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--gray-900);
+  margin-bottom: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.final-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.final-comment {
+  font-size: 14px;
+  color: var(--text-muted);
+  max-width: 340px;
+  margin: 0 auto 1.5rem;
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+.replay-btn {
+  padding: 13px 32px;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--border-strong);
+  background: var(--surface);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.12s, transform 0.12s;
+}
+
+.replay-btn:hover { background: var(--gray-50); transform: translateY(-1px); }
+
+@media (max-width: 480px) {
+  body { padding: 1.5rem 0.75rem 3rem; }
+  h1 { font-size: 26px; }
+  .stats-grid { grid-template-columns: 1fr; }
+  .stat.wide { grid-column: span 1; }
+}
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <div class="eyebrow">2024 U.S. Presidential Election</div>
+  <h1>How did they <em>vote?</em></h1>
+  <p class="sub">Read the census data, then guess which candidate won each county — and by how much. 12 rounds drawn from 90+ counties across every region.</p>
+</header>
+
+<main class="game-container">
+  <div class="score-row">
+    <div class="score-pill"><div class="slabel">Score</div><div class="sval" id="score">0</div></div>
+    <div class="score-pill"><div class="slabel">Correct</div><div class="sval" id="correct">0</div></div>
+    <div class="score-pill"><div class="slabel">Best streak</div><div class="sval" id="streak">0</div></div>
+  </div>
+  <div class="round-meta">
+    <span class="round-num" id="round-label">Round 1 of 10</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress" style="width:0%"></div></div>
+  <div id="game-area"></div>
+</main>
+
+<script>
+const counties = [
+  // ORIGINAL 20
+  { name: "San Francisco County", state: "California", pop: 873965, medIncome: 136689, perCapita: 82837, white: 40, black: 5, hispanic: 15, asian: 34, other: 6, college: 60, urban: 100, sqMiles: 47, winner: "harris", margin: 70, notes: "Dense urban tech hub; one of the most Democratic counties in the nation" },
+  { name: "Loving County", state: "Texas", pop: 64, medIncome: 56250, perCapita: 42100, white: 75, black: 0, hispanic: 24, asian: 0, other: 1, college: 18, urban: 0, sqMiles: 669, winner: "trump", margin: 82, notes: "The smallest county by population in the entire U.S." },
+  { name: "Oglala Lakota County", state: "South Dakota", pop: 14177, medIncome: 28528, perCapita: 12118, white: 6, black: 0, hispanic: 2, asian: 0, other: 92, college: 14, urban: 0, sqMiles: 2097, winner: "harris", margin: 72, notes: "Majority Native American — one of the poorest counties in the country" },
+  { name: "King County", state: "Washington", pop: 2269675, medIncome: 107982, perCapita: 61304, white: 56, black: 7, hispanic: 10, asian: 20, other: 7, college: 55, urban: 95, sqMiles: 2126, winner: "harris", margin: 50, notes: "Home to Seattle; major tech employers including Amazon and Microsoft" },
+  { name: "Appomattox County", state: "Virginia", pop: 16197, medIncome: 56000, perCapita: 28000, white: 65, black: 28, hispanic: 3, asian: 1, other: 3, college: 21, urban: 10, sqMiles: 334, winner: "trump", margin: 36, notes: "Rural central Virginia; historical site of Civil War surrender" },
+  { name: "Miami-Dade County", state: "Florida", pop: 2716940, medIncome: 58510, perCapita: 30940, white: 16, black: 17, hispanic: 67, asian: 1, other: 1, college: 32, urban: 98, sqMiles: 1898, winner: "trump", margin: 11, notes: "Majority-Hispanic urban county; shifted sharply rightward in 2024" },
+  { name: "Geauga County", state: "Ohio", pop: 97783, medIncome: 83050, perCapita: 42200, white: 95, black: 1, hispanic: 2, asian: 1, other: 1, college: 38, urban: 20, sqMiles: 404, winner: "trump", margin: 40, notes: "Affluent exurban county east of Cleveland" },
+  { name: "Bronx County", state: "New York", pop: 1472654, medIncome: 40320, perCapita: 20085, white: 10, black: 36, hispanic: 56, asian: 4, other: 4, college: 21, urban: 100, sqMiles: 42, winner: "harris", margin: 58, notes: "Majority-minority urban borough of New York City" },
+  { name: "Sioux County", state: "Iowa", pop: 35893, medIncome: 71000, perCapita: 34500, white: 91, black: 1, hispanic: 7, asian: 1, other: 0, college: 30, urban: 5, sqMiles: 769, winner: "trump", margin: 66, notes: "Heavily Dutch Reformed Christian farming community; one of the most Republican in Iowa" },
+  { name: "Starr County", state: "Texas", pop: 65920, medIncome: 31300, perCapita: 13200, white: 1, black: 0, hispanic: 97, asian: 0, other: 2, college: 13, urban: 35, sqMiles: 1223, winner: "trump", margin: 18, notes: "Rio Grande border county; once reliably Democratic, flipped fully in 2024" },
+  { name: "Douglas County", state: "Colorado", pop: 370981, medIncome: 121000, perCapita: 56000, white: 84, black: 2, hispanic: 7, asian: 5, other: 2, college: 55, urban: 65, sqMiles: 843, winner: "trump", margin: 8, notes: "Wealthy Denver suburb; narrowing margins in recent cycles" },
+  { name: "Nantucket County", state: "Massachusetts", pop: 14255, medIncome: 98000, perCapita: 72000, white: 79, black: 5, hispanic: 14, asian: 2, other: 0, college: 52, urban: 60, sqMiles: 48, winner: "harris", margin: 28, notes: "Affluent island resort and fishing community" },
+  { name: "Perry County", state: "Kentucky", pop: 24610, medIncome: 30200, perCapita: 17100, white: 97, black: 1, hispanic: 1, asian: 0, other: 1, college: 14, urban: 5, sqMiles: 341, winner: "trump", margin: 71, notes: "Coal country Appalachian county; voted Obama twice, now deeply Republican" },
+  { name: "Marin County", state: "California", pop: 258826, medIncome: 128000, perCapita: 81700, white: 72, black: 2, hispanic: 15, asian: 7, other: 4, college: 63, urban: 70, sqMiles: 520, winner: "harris", margin: 57, notes: "Very affluent suburban county north of San Francisco" },
+  { name: "Zapata County", state: "Texas", pop: 14179, medIncome: 35800, perCapita: 14900, white: 2, black: 0, hispanic: 92, asian: 0, other: 6, college: 12, urban: 20, sqMiles: 1058, winner: "trump", margin: 23, notes: "South Texas border county; traditionally Democratic, now competitive" },
+  { name: "Howard County", state: "Maryland", pop: 340908, medIncome: 126100, perCapita: 58700, white: 49, black: 19, hispanic: 7, asian: 22, other: 3, college: 63, urban: 90, sqMiles: 251, winner: "harris", margin: 37, notes: "Planned diverse suburban community; one of the most educated counties in America" },
+  { name: "Garfield County", state: "Utah", pop: 5051, medIncome: 55000, perCapita: 28500, white: 88, black: 0, hispanic: 7, asian: 0, other: 5, college: 20, urban: 0, sqMiles: 5175, winner: "trump", margin: 75, notes: "Rural canyon country; home to Bryce Canyon and Capitol Reef national parks" },
+  { name: "Prince George's County", state: "Maryland", pop: 967201, medIncome: 82700, perCapita: 36200, white: 13, black: 62, hispanic: 19, asian: 5, other: 1, college: 37, urban: 95, sqMiles: 483, winner: "harris", margin: 60, notes: "Majority Black suburban county bordering Washington D.C." },
+  { name: "Waukesha County", state: "Wisconsin", pop: 404198, medIncome: 89000, perCapita: 48700, white: 90, black: 2, hispanic: 4, asian: 3, other: 1, college: 44, urban: 75, sqMiles: 555, winner: "trump", margin: 24, notes: "Milwaukee's largest suburb; reliably the most Republican county in Wisconsin" },
+  { name: "Sumter County", state: "Georgia", pop: 29524, medIncome: 36400, perCapita: 18300, white: 36, black: 62, hispanic: 3, asian: 0, other: 1, college: 21, urban: 40, sqMiles: 478, winner: "harris", margin: 31, notes: "Majority Black rural Georgia county; birthplace of Jimmy Carter" },
+
+  // NORTHEAST
+  { name: "Suffolk County", state: "Massachusetts", pop: 803907, medIncome: 72400, perCapita: 43900, white: 44, black: 22, hispanic: 20, asian: 10, other: 4, college: 49, urban: 100, sqMiles: 58, winner: "harris", margin: 62, notes: "Home to Boston; dense, diverse, highly educated urban core" },
+  { name: "Windham County", state: "Vermont", pop: 44513, medIncome: 62000, perCapita: 38000, white: 91, black: 1, hispanic: 4, asian: 2, other: 2, college: 42, urban: 20, sqMiles: 785, winner: "harris", margin: 34, notes: "Rural Vermont county with a strong progressive tradition" },
+  { name: "Susquehanna County", state: "Pennsylvania", pop: 40328, medIncome: 52000, perCapita: 27000, white: 97, black: 1, hispanic: 1, asian: 0, other: 1, college: 16, urban: 5, sqMiles: 832, winner: "trump", margin: 44, notes: "Rural northern Pennsylvania; natural gas country that swung hard right after 2008" },
+  { name: "Delaware County", state: "Pennsylvania", pop: 576830, medIncome: 76000, perCapita: 44000, white: 65, black: 22, hispanic: 5, asian: 7, other: 1, college: 47, urban: 97, sqMiles: 443, winner: "harris", margin: 25, notes: "Philadelphia suburb that flipped blue in 2016 and stayed there" },
+  { name: "Essex County", state: "New Jersey", pop: 863728, medIncome: 58900, perCapita: 37500, white: 30, black: 40, hispanic: 20, asian: 6, other: 4, college: 37, urban: 98, sqMiles: 127, winner: "harris", margin: 52, notes: "Home to Newark; majority-minority urban county, one of NJ's most Democratic" },
+  { name: "Cheshire County", state: "New Hampshire", pop: 77117, medIncome: 68000, perCapita: 38000, white: 91, black: 2, hispanic: 4, asian: 2, other: 1, college: 39, urban: 35, sqMiles: 707, winner: "harris", margin: 10, notes: "Home to Keene; college-influenced county in a swing state, narrowly blue" },
+  { name: "Carroll County", state: "New Hampshire", pop: 47818, medIncome: 65000, perCapita: 41000, white: 95, black: 1, hispanic: 2, asian: 1, other: 1, college: 35, urban: 10, sqMiles: 934, winner: "trump", margin: 15, notes: "Lakes Region tourist economy; rural New Hampshire that leans Republican" },
+  { name: "Aroostook County", state: "Maine", pop: 67105, medIncome: 47000, perCapita: 26000, white: 94, black: 1, hispanic: 2, asian: 1, other: 2, college: 20, urban: 10, sqMiles: 6672, winner: "trump", margin: 30, notes: "The County — Maine's vast, remote potato-farming northernmost county" },
+  { name: "Cumberland County", state: "Maine", pop: 309576, medIncome: 82000, perCapita: 52000, white: 87, black: 4, hispanic: 4, asian: 3, other: 2, college: 50, urban: 75, sqMiles: 836, winner: "harris", margin: 30, notes: "Home to Portland; Maine's most populous and most Democratic county" },
+  { name: "Litchfield County", state: "Connecticut", pop: 183031, medIncome: 88000, perCapita: 55000, white: 87, black: 3, hispanic: 8, asian: 2, other: 0, college: 46, urban: 25, sqMiles: 920, winner: "harris", margin: 8, notes: "Affluent rural/exurban northwest Connecticut; competitive and shifting" },
+
+  // SOUTH
+  { name: "Williamson County", state: "Tennessee", pop: 262604, medIncome: 122000, perCapita: 62000, white: 87, black: 5, hispanic: 5, asian: 3, other: 0, college: 58, urban: 70, sqMiles: 583, winner: "trump", margin: 38, notes: "Nashville's fastest-growing suburb; wealthy, educated, but firmly Republican" },
+  { name: "Jefferson County", state: "Alabama", pop: 674721, medIncome: 56000, perCapita: 34000, white: 52, black: 43, hispanic: 3, asian: 2, other: 0, college: 34, urban: 85, sqMiles: 1116, winner: "harris", margin: 12, notes: "Home to Birmingham; mixed-race urban county, competitive by Alabama standards" },
+  { name: "Quitman County", state: "Mississippi", pop: 6787, medIncome: 27000, perCapita: 13000, white: 26, black: 73, hispanic: 1, asian: 0, other: 0, college: 11, urban: 15, sqMiles: 405, winner: "harris", margin: 55, notes: "Deep Delta county; among the poorest and most heavily Black in the U.S." },
+  { name: "Collin County", state: "Texas", pop: 1122236, medIncome: 105000, perCapita: 54000, white: 60, black: 9, hispanic: 15, asian: 14, other: 2, college: 55, urban: 95, sqMiles: 841, winner: "trump", margin: 5, notes: "Dallas mega-suburb; once deeply red, now the most competitive large county in Texas" },
+  { name: "Loudoun County", state: "Virginia", pop: 433285, medIncome: 147900, perCapita: 72000, white: 57, black: 10, hispanic: 12, asian: 19, other: 2, college: 62, urban: 90, sqMiles: 517, winner: "harris", margin: 18, notes: "Nation's highest-median-income county; DC tech corridor flipped in 2020, held blue" },
+  { name: "McDowell County", state: "West Virginia", pop: 18722, medIncome: 24000, perCapita: 14000, white: 88, black: 10, hispanic: 1, asian: 0, other: 1, college: 9, urban: 5, sqMiles: 535, winner: "trump", margin: 72, notes: "Former coal capital; among the poorest counties in America, once solidly Democratic" },
+  { name: "Forsyth County", state: "North Carolina", pop: 391797, medIncome: 57000, perCapita: 35000, white: 57, black: 29, hispanic: 11, asian: 3, other: 0, college: 37, urban: 88, sqMiles: 413, winner: "harris", margin: 6, notes: "Home to Winston-Salem; competitive urban county with large Black population" },
+  { name: "Lincoln County", state: "Mississippi", pop: 34010, medIncome: 44000, perCapita: 23000, white: 60, black: 38, hispanic: 1, asian: 0, other: 1, college: 18, urban: 30, sqMiles: 587, winner: "trump", margin: 24, notes: "Rural southwest Mississippi; white majority leans heavily Republican" },
+  { name: "Orleans Parish", state: "Louisiana", pop: 383997, medIncome: 43600, perCapita: 30000, white: 30, black: 59, hispanic: 5, asian: 3, other: 3, college: 37, urban: 100, sqMiles: 169, winner: "harris", margin: 60, notes: "New Orleans; culturally distinct, majority Black city/parish, strongly Democratic" },
+  { name: "St. Tammany Parish", state: "Louisiana", pop: 275038, medIncome: 76000, perCapita: 41000, white: 79, black: 12, hispanic: 5, asian: 2, other: 2, college: 37, urban: 65, sqMiles: 1124, winner: "trump", margin: 42, notes: "Upscale New Orleans suburb on the north shore; reliably Republican" },
+  { name: "Dade County", state: "Georgia", pop: 16906, medIncome: 56000, perCapita: 28000, white: 92, black: 3, hispanic: 4, asian: 0, other: 1, college: 17, urban: 5, sqMiles: 174, winner: "trump", margin: 58, notes: "Northwest Georgia mountain county on the Alabama border; very rural and white" },
+  { name: "Gwinnett County", state: "Georgia", pop: 975527, medIncome: 72000, perCapita: 36000, white: 40, black: 25, hispanic: 21, asian: 12, other: 2, college: 38, urban: 95, sqMiles: 437, winner: "harris", margin: 10, notes: "Atlanta suburb transformed by immigration; flipped blue in 2020, held in 2024" },
+  { name: "Escambia County", state: "Florida", pop: 322507, medIncome: 56000, perCapita: 31000, white: 68, black: 20, hispanic: 6, asian: 3, other: 3, college: 29, urban: 70, sqMiles: 656, winner: "trump", margin: 30, notes: "Pensacola and the Panhandle; military-heavy, reliably Republican northwest Florida" },
+  { name: "Leon County", state: "Florida", pop: 297173, medIncome: 59000, perCapita: 35000, white: 58, black: 30, hispanic: 7, asian: 4, other: 1, college: 50, urban: 88, sqMiles: 667, winner: "harris", margin: 25, notes: "Tallahassee and two major universities; blue island in a red state" },
+  { name: "Harlan County", state: "Kentucky", pop: 26010, medIncome: 29000, perCapita: 16000, white: 96, black: 1, hispanic: 1, asian: 0, other: 2, college: 12, urban: 5, sqMiles: 467, winner: "trump", margin: 77, notes: "Famous coal mining county immortalized in labor history; once voted FDR 90%" },
+
+  // MIDWEST
+  { name: "Cook County", state: "Illinois", pop: 5275541, medIncome: 67300, perCapita: 42000, white: 43, black: 24, hispanic: 25, asian: 7, other: 1, college: 40, urban: 97, sqMiles: 945, winner: "harris", margin: 40, notes: "Home to Chicago; largest county in the Midwest, dominates Illinois elections" },
+  { name: "Mahoning County", state: "Ohio", pop: 228854, medIncome: 48000, perCapita: 27000, white: 76, black: 19, hispanic: 4, asian: 1, other: 0, college: 26, urban: 75, sqMiles: 415, winner: "trump", margin: 4, notes: "Youngstown steel country; longtime Democratic stronghold that has trended Republican" },
+  { name: "Johnson County", state: "Kansas", pop: 617045, medIncome: 97000, perCapita: 52000, white: 82, black: 5, hispanic: 7, asian: 5, other: 1, college: 57, urban: 97, sqMiles: 477, winner: "harris", margin: 5, notes: "Kansas City's wealthiest suburb; flipped blue in 2020 and held in 2024" },
+  { name: "Keweenaw County", state: "Michigan", pop: 2086, medIncome: 46000, perCapita: 29000, white: 94, black: 1, hispanic: 2, asian: 1, other: 2, college: 24, urban: 0, sqMiles: 541, winner: "trump", margin: 38, notes: "Michigan's smallest county on the Upper Peninsula; isolated copper-mining heritage" },
+  { name: "Washtenaw County", state: "Michigan", pop: 375370, medIncome: 75000, perCapita: 46000, white: 70, black: 12, hispanic: 5, asian: 10, other: 3, college: 62, urban: 75, sqMiles: 705, winner: "harris", margin: 41, notes: "Home to University of Michigan in Ann Arbor; highly educated, reliably blue" },
+  { name: "Macomb County", state: "Michigan", pop: 881217, medIncome: 68000, perCapita: 38000, white: 88, black: 7, hispanic: 2, asian: 2, other: 1, college: 29, urban: 85, sqMiles: 479, winner: "trump", margin: 14, notes: "Detroit suburb historically synonymous with the 'Reagan Democrat'; swings elections" },
+  { name: "Story County", state: "Iowa", pop: 100035, medIncome: 58000, perCapita: 31000, white: 82, black: 4, hispanic: 6, asian: 6, other: 2, college: 58, urban: 65, sqMiles: 573, winner: "harris", margin: 14, notes: "Home to Iowa State University in Ames; college-dominated blue island in red Iowa" },
+  { name: "Clay County", state: "Missouri", pop: 254698, medIncome: 72000, perCapita: 39000, white: 84, black: 8, hispanic: 5, asian: 2, other: 1, college: 37, urban: 80, sqMiles: 396, winner: "trump", margin: 17, notes: "Kansas City suburb that has trended red with Missouri's broader rightward shift" },
+  { name: "St. Louis County", state: "Missouri", pop: 1003058, medIncome: 72000, perCapita: 46000, white: 67, black: 26, hispanic: 3, asian: 3, other: 1, college: 46, urban: 96, sqMiles: 524, winner: "harris", margin: 22, notes: "Suburban St. Louis; diverse and educated, reliably blue in an otherwise red state" },
+  { name: "Mellette County", state: "South Dakota", pop: 2049, medIncome: 29000, perCapita: 12000, white: 25, black: 1, hispanic: 3, asian: 0, other: 71, college: 11, urban: 0, sqMiles: 1307, winner: "harris", margin: 28, notes: "Majority Native American rural county adjacent to Rosebud Sioux Reservation" },
+  { name: "Dane County", state: "Wisconsin", pop: 570421, medIncome: 76000, perCapita: 47000, white: 78, black: 6, hispanic: 7, asian: 5, other: 4, college: 58, urban: 85, sqMiles: 1197, winner: "harris", margin: 44, notes: "Home to Madison and UW; the most Democratic county in Wisconsin by far" },
+  { name: "Trempealeau County", state: "Wisconsin", pop: 31000, medIncome: 60000, perCapita: 31000, white: 91, black: 1, hispanic: 6, asian: 1, other: 1, college: 22, urban: 15, sqMiles: 735, winner: "trump", margin: 14, notes: "Rural western Wisconsin river county; flipped from Obama to Trump and stayed red" },
+  { name: "Lake County", state: "Indiana", pop: 498927, medIncome: 54000, perCapita: 30000, white: 52, black: 28, hispanic: 18, asian: 1, other: 1, college: 24, urban: 90, sqMiles: 501, winner: "harris", margin: 22, notes: "Gary and the steel belt; one of Indiana's only reliably blue counties" },
+  { name: "Hamilton County", state: "Indiana", pop: 368060, medIncome: 103000, perCapita: 57000, white: 86, black: 4, hispanic: 5, asian: 5, other: 0, college: 55, urban: 85, sqMiles: 397, winner: "trump", margin: 14, notes: "Indianapolis's wealthiest suburb; was reliably R+30, now narrowing fast" },
+  { name: "Cass County", state: "North Dakota", pop: 196832, medIncome: 68000, perCapita: 40000, white: 83, black: 5, hispanic: 3, asian: 4, other: 5, college: 44, urban: 75, sqMiles: 1766, winner: "trump", margin: 22, notes: "Home to Fargo and NDSU; the closest thing to a swing county in North Dakota" },
+
+  // WEST
+  { name: "Los Angeles County", state: "California", pop: 10014009, medIncome: 72000, perCapita: 40000, white: 26, black: 8, hispanic: 49, asian: 15, other: 2, college: 34, urban: 99, sqMiles: 4058, winner: "harris", margin: 44, notes: "Most populous county in the U.S.; massive, diverse, and strongly Democratic" },
+  { name: "Maricopa County", state: "Arizona", pop: 4485414, medIncome: 72000, perCapita: 40000, white: 57, black: 5, hispanic: 29, asian: 4, other: 5, college: 38, urban: 92, sqMiles: 9224, winner: "trump", margin: 5, notes: "Phoenix metro; flipped to Biden in 2020, flipped back to Trump in 2024" },
+  { name: "Coconino County", state: "Arizona", pop: 145131, medIncome: 56000, perCapita: 29000, white: 46, black: 2, hispanic: 15, asian: 2, other: 35, college: 38, urban: 40, sqMiles: 18661, winner: "harris", margin: 12, notes: "Home to Flagstaff and large Navajo Nation lands; diverse and narrowly blue" },
+  { name: "La Paz County", state: "Arizona", pop: 21108, medIncome: 38000, perCapita: 22000, white: 62, black: 2, hispanic: 24, asian: 1, other: 11, college: 13, urban: 15, sqMiles: 4513, winner: "trump", margin: 38, notes: "Small desert county along the Colorado River; sparsely populated and very red" },
+  { name: "Teton County", state: "Wyoming", pop: 23439, medIncome: 82000, perCapita: 68000, white: 82, black: 1, hispanic: 14, asian: 1, other: 2, college: 60, urban: 50, sqMiles: 4008, winner: "harris", margin: 22, notes: "Jackson Hole; ultra-wealthy ski resort county, a rare blue enclave in Wyoming" },
+  { name: "Niobrara County", state: "Wyoming", pop: 2416, medIncome: 57000, perCapita: 35000, white: 93, black: 1, hispanic: 5, asian: 0, other: 1, college: 19, urban: 0, sqMiles: 2626, winner: "trump", margin: 78, notes: "Tiny ranching county; one of the most Republican counties in the nation" },
+  { name: "Clark County", state: "Nevada", pop: 2265461, medIncome: 63000, perCapita: 36000, white: 40, black: 13, hispanic: 33, asian: 10, other: 4, college: 28, urban: 97, sqMiles: 7891, winner: "harris", margin: 6, notes: "Las Vegas; hospitality/service economy, diverse, competitive swing county" },
+  { name: "Elko County", state: "Nevada", pop: 54770, medIncome: 72000, perCapita: 38000, white: 68, black: 1, hispanic: 22, asian: 1, other: 8, college: 16, urban: 25, sqMiles: 17203, winner: "trump", margin: 50, notes: "Mining and ranching county in rural northern Nevada; staunchly Republican" },
+  { name: "Multnomah County", state: "Oregon", pop: 812855, medIncome: 76000, perCapita: 51000, white: 67, black: 6, hispanic: 10, asian: 8, other: 9, college: 52, urban: 98, sqMiles: 431, winner: "harris", margin: 55, notes: "Home to Portland; one of the most liberal large counties in the West" },
+  { name: "Grant County", state: "Oregon", pop: 7182, medIncome: 46000, perCapita: 28000, white: 91, black: 0, hispanic: 6, asian: 0, other: 3, college: 20, urban: 5, sqMiles: 4528, winner: "trump", margin: 62, notes: "Remote eastern Oregon ranching county; votes opposite of the Willamette Valley" },
+  { name: "Kalawao County", state: "Hawaii", pop: 82, medIncome: 57000, perCapita: 35000, white: 5, black: 1, hispanic: 2, asian: 60, other: 32, college: 35, urban: 0, sqMiles: 12, winner: "harris", margin: 55, notes: "Smallest county in the U.S. by area; former leprosy colony on Molokai's north coast" },
+  { name: "Honolulu County", state: "Hawaii", pop: 1016508, medIncome: 85000, perCapita: 43000, white: 18, black: 2, hispanic: 10, asian: 54, other: 16, college: 37, urban: 90, sqMiles: 600, winner: "harris", margin: 30, notes: "Hawaii's main island; highly Asian-American, reliably Democratic" },
+  { name: "Ravalli County", state: "Montana", pop: 44436, medIncome: 52000, perCapita: 30000, white: 93, black: 0, hispanic: 3, asian: 1, other: 3, college: 28, urban: 10, sqMiles: 2394, winner: "trump", margin: 46, notes: "Bitterroot Valley; libertarian-leaning, heavily white, very rural Montana" },
+  { name: "Missoula County", state: "Montana", pop: 120985, medIncome: 57000, perCapita: 35000, white: 87, black: 1, hispanic: 4, asian: 2, other: 6, college: 48, urban: 65, sqMiles: 2618, winner: "harris", margin: 12, notes: "University of Montana county; progressive blue island amid Montana's red sea" },
+  { name: "San Juan County", state: "New Mexico", pop: 122131, medIncome: 52000, perCapita: 27000, white: 35, black: 2, hispanic: 24, asian: 1, other: 38, college: 18, urban: 40, sqMiles: 5538, winner: "trump", margin: 14, notes: "Oil and gas economy near Four Corners; sizable Navajo population but leans red" },
+  { name: "Santa Fe County", state: "New Mexico", pop: 154823, medIncome: 59000, perCapita: 38000, white: 50, black: 2, hispanic: 43, asian: 2, other: 3, college: 45, urban: 70, sqMiles: 1909, winner: "harris", margin: 40, notes: "State capital; arts community, government workers, college-educated — strongly blue" },
+  { name: "Cache County", state: "Utah", pop: 135257, medIncome: 65000, perCapita: 27000, white: 85, black: 1, hispanic: 8, asian: 3, other: 3, college: 38, urban: 55, sqMiles: 1165, winner: "trump", margin: 46, notes: "Logan and Utah State University; majority LDS, reliably Republican despite the campus" },
+  { name: "Summit County", state: "Utah", pop: 42145, medIncome: 104000, perCapita: 67000, white: 83, black: 1, hispanic: 11, asian: 3, other: 2, college: 55, urban: 40, sqMiles: 1871, winner: "harris", margin: 12, notes: "Park City ski resort county; wealthy, educated, one of Utah's few blue counties" },
+  { name: "Yakima County", state: "Washington", pop: 255256, medIncome: 51000, perCapita: 26000, white: 43, black: 1, hispanic: 50, asian: 2, other: 4, college: 18, urban: 50, sqMiles: 4296, winner: "trump", margin: 18, notes: "Agricultural valley with large Hispanic farmworker population; leans Republican" },
+  { name: "San Juan County", state: "Washington", pop: 17884, medIncome: 76000, perCapita: 56000, white: 88, black: 1, hispanic: 5, asian: 3, other: 3, college: 57, urban: 30, sqMiles: 172, winner: "harris", margin: 38, notes: "Idyllic island county northwest of Seattle; affluent retirees and remote workers" },
+
+  // MORE SWING / INTERESTING
+  { name: "Erie County", state: "Pennsylvania", pop: 272048, medIncome: 52000, perCapita: 30000, white: 79, black: 12, hispanic: 5, asian: 2, other: 2, college: 28, urban: 70, sqMiles: 800, winner: "trump", margin: 3, notes: "Rust Belt Lake Erie city; voted Obama, Obama, Trump, Trump — a true bellwether" },
+  { name: "Luzerne County", state: "Pennsylvania", pop: 322740, medIncome: 54000, perCapita: 30000, white: 87, black: 4, hispanic: 7, asian: 1, other: 1, college: 23, urban: 55, sqMiles: 891, winner: "trump", margin: 22, notes: "Scranton/Wilkes-Barre; Biden's home-region PA county that has drifted sharply right" },
+  { name: "Chester County", state: "Pennsylvania", pop: 545823, medIncome: 102000, perCapita: 62000, white: 78, black: 7, hispanic: 7, asian: 7, other: 1, college: 58, urban: 80, sqMiles: 751, winner: "harris", margin: 15, notes: "Philadelphia's wealthiest suburb; flipped Democratic in 2016, stayed blue" },
+  { name: "Outagamie County", state: "Wisconsin", pop: 189389, medIncome: 68000, perCapita: 37000, white: 87, black: 2, hispanic: 7, asian: 4, other: 0, college: 31, urban: 65, sqMiles: 640, winner: "trump", margin: 10, notes: "Appleton manufacturing county; classic working-class Midwest, leans Republican" },
+  { name: "Pinal County", state: "Arizona", pop: 448338, medIncome: 64000, perCapita: 30000, white: 64, black: 4, hispanic: 23, asian: 2, other: 7, college: 22, urban: 55, sqMiles: 5370, winner: "trump", margin: 26, notes: "Phoenix exurb and mining corridor; strongly red and growing fast" },
+  { name: "Washoe County", state: "Nevada", pop: 494029, medIncome: 67000, perCapita: 40000, white: 66, black: 3, hispanic: 21, asian: 5, other: 5, college: 35, urban: 80, sqMiles: 6342, winner: "harris", margin: 2, notes: "Reno metro; the true swing county of Nevada, decided by razor-thin margins" },
+  { name: "Fulton County", state: "Georgia", pop: 1075813, medIncome: 72000, perCapita: 53000, white: 38, black: 44, hispanic: 8, asian: 7, other: 3, college: 51, urban: 97, sqMiles: 529, winner: "harris", margin: 44, notes: "Atlanta's core county; diverse, educated urban center, heavily Democratic" },
+  { name: "Forsyth County", state: "Georgia", pop: 267759, medIncome: 108000, perCapita: 55000, white: 78, black: 5, hispanic: 9, asian: 8, other: 0, college: 52, urban: 80, sqMiles: 227, winner: "trump", margin: 25, notes: "Atlanta's booming wealthy northern suburb; college-educated but stays Republican" },
+  { name: "Dougherty County", state: "Georgia", pop: 85033, medIncome: 38000, perCapita: 21000, white: 27, black: 69, hispanic: 3, asian: 1, other: 0, college: 22, urban: 80, sqMiles: 330, winner: "harris", margin: 45, notes: "Albany; majority Black small city in southwest Georgia" },
+  { name: "Kenedy County", state: "Texas", pop: 415, medIncome: 43000, perCapita: 30000, white: 15, black: 0, hispanic: 83, asian: 0, other: 2, college: 10, urban: 0, sqMiles: 1457, winner: "trump", margin: 12, notes: "One of the least populated counties in the U.S.; ranching economy, flipped red" },
+  { name: "Travis County", state: "Texas", pop: 1290188, medIncome: 78000, perCapita: 50000, white: 50, black: 9, hispanic: 32, asian: 7, other: 2, college: 51, urban: 97, sqMiles: 989, winner: "harris", margin: 37, notes: "Austin; rapidly growing tech hub, the most Democratic large county in Texas" },
+  { name: "Medina County", state: "Texas", pop: 52500, medIncome: 62000, perCapita: 30000, white: 47, black: 2, hispanic: 49, asian: 0, other: 2, college: 18, urban: 30, sqMiles: 1284, winner: "trump", margin: 30, notes: "Southwest Texas near San Antonio; Hispanic-majority but tilts Republican" },
+  { name: "Cuyahoga County", state: "Ohio", pop: 1264817, medIncome: 54000, perCapita: 34000, white: 58, black: 33, hispanic: 5, asian: 2, other: 2, college: 36, urban: 95, sqMiles: 457, winner: "harris", margin: 30, notes: "Cleveland; anchor of Northeast Ohio, major source of Democratic votes in a swing state" },
+  { name: "Delaware County", state: "Ohio", pop: 225091, medIncome: 105000, perCapita: 55000, white: 89, black: 4, hispanic: 3, asian: 4, other: 0, college: 55, urban: 70, sqMiles: 443, winner: "trump", margin: 18, notes: "Columbus's wealthiest suburb; college-educated, high-income, but firmly Republican" },
+  { name: "Monroe County", state: "Florida", pop: 82874, medIncome: 68000, perCapita: 50000, white: 65, black: 4, hispanic: 28, asian: 1, other: 2, college: 38, urban: 75, sqMiles: 983, winner: "trump", margin: 12, notes: "Florida Keys; scenic, libertarian-leaning, shifted right with Cuban-American population" },
+  { name: "Alachua County", state: "Florida", pop: 278468, medIncome: 48000, perCapita: 28000, white: 64, black: 22, hispanic: 9, asian: 4, other: 1, college: 52, urban: 80, sqMiles: 874, winner: "harris", margin: 20, notes: "Home to University of Florida in Gainesville; college-driven blue county" },
+  { name: "Rutherford County", state: "Tennessee", pop: 354031, medIncome: 73000, perCapita: 36000, white: 72, black: 16, hispanic: 8, asian: 4, other: 0, college: 34, urban: 75, sqMiles: 619, winner: "trump", margin: 34, notes: "Fast-growing Nashville suburb; diverse but follows suburban Republican trend in Tennessee" },
+  { name: "Shelby County", state: "Tennessee", pop: 937166, medIncome: 56000, perCapita: 34000, white: 37, black: 54, hispanic: 6, asian: 2, other: 1, college: 34, urban: 95, sqMiles: 755, winner: "harris", margin: 28, notes: "Memphis; majority Black urban county, Tennessee's only reliably blue large county" },
+  { name: "Blaine County", state: "Idaho", pop: 23021, medIncome: 78000, perCapita: 57000, white: 80, black: 1, hispanic: 16, asian: 1, other: 2, college: 54, urban: 50, sqMiles: 2645, winner: "harris", margin: 26, notes: "Sun Valley ski resort county; wealthy, educated, one of Idaho's only blue counties" },
+  { name: "Canyon County", state: "Idaho", pop: 248866, medIncome: 60000, perCapita: 27000, white: 69, black: 1, hispanic: 25, asian: 1, other: 4, college: 19, urban: 60, sqMiles: 576, winner: "trump", margin: 40, notes: "Nampa exurb of Boise; rapidly growing, heavily white and Hispanic but very Republican" },
+  { name: "Bernalillo County", state: "New Mexico", pop: 679121, medIncome: 55000, perCapita: 34000, white: 40, black: 3, hispanic: 48, asian: 3, other: 6, college: 40, urban: 95, sqMiles: 1166, winner: "harris", margin: 28, notes: "Albuquerque and UNM; New Mexico's largest county and Democratic stronghold" },
+  { name: "Lea County", state: "New Mexico", pop: 75291, medIncome: 57000, perCapita: 27000, white: 42, black: 4, hispanic: 51, asian: 0, other: 3, college: 14, urban: 40, sqMiles: 4393, winner: "trump", margin: 30, notes: "Permian Basin oil country; Hispanic-majority but trending strongly Republican" },
+  { name: "Tooele County", state: "Utah", pop: 76688, medIncome: 79000, perCapita: 32000, white: 82, black: 1, hispanic: 11, asian: 1, other: 5, college: 21, urban: 50, sqMiles: 6923, winner: "trump", margin: 42, notes: "Salt Lake exurb and military depot; growing working-class community, solidly red" },
+  { name: "Wallowa County", state: "Oregon", pop: 7189, medIncome: 46000, perCapita: 28000, white: 92, black: 0, hispanic: 5, asian: 0, other: 3, college: 26, urban: 0, sqMiles: 3153, winner: "trump", margin: 42, notes: "Remote northeast Oregon ranch and timber county; Oregon's equivalent of the rural West" },
+  { name: "Jefferson County", state: "Colorado", pop: 591108, medIncome: 85000, perCapita: 50000, white: 83, black: 2, hispanic: 9, asian: 4, other: 2, college: 49, urban: 85, sqMiles: 774, winner: "harris", margin: 6, notes: "Denver foothill suburb; swung from red to purple to blue over the past decade" },
+  { name: "El Paso County", state: "Colorado", pop: 730395, medIncome: 75000, perCapita: 40000, white: 72, black: 6, hispanic: 16, asian: 3, other: 3, college: 37, urban: 90, sqMiles: 2130, winner: "trump", margin: 15, notes: "Colorado Springs and Fort Carson military base; persistently one of Colorado's reddest" },
+  { name: "Pennington County", state: "South Dakota", pop: 114041, medIncome: 63000, perCapita: 37000, white: 80, black: 2, hispanic: 4, asian: 2, other: 12, college: 33, urban: 65, sqMiles: 2777, winner: "trump", margin: 30, notes: "Rapid City; gateway to the Black Hills, the largest city in western South Dakota" },
+  { name: "Todd County", state: "South Dakota", pop: 10177, medIncome: 27000, perCapita: 10500, white: 4, black: 0, hispanic: 2, asian: 0, other: 94, college: 11, urban: 0, sqMiles: 1388, winner: "harris", margin: 66, notes: "Rosebud Sioux Reservation; one of the most Native American and poorest counties in the U.S." },
+  { name: "Minnehaha County", state: "South Dakota", pop: 200410, medIncome: 64000, perCapita: 38000, white: 79, black: 7, hispanic: 5, asian: 4, other: 5, college: 36, urban: 85, sqMiles: 808, winner: "trump", margin: 18, notes: "Sioux Falls; South Dakota's largest city, still leans Republican" },
+];
+
+
+let pool = [], current = null, roundNum = 0;
+const TOTAL = 12;
+let score = 0, correctCount = 0, streak = 0, bestStreak = 0;
+let answered = false, guessedMargin = 10;
+
+function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+function startGame() {
+  pool = shuffle(counties).slice(0, TOTAL);
+  score = 0; correctCount = 0; streak = 0; bestStreak = 0; roundNum = 0;
+  updateScoreBar();
+  document.getElementById('progress').style.width = '0%';
+  nextRound();
+}
+
+function updateScoreBar() {
+  document.getElementById('score').textContent = score;
+  document.getElementById('correct').textContent = correctCount;
+  document.getElementById('streak').textContent = bestStreak;
+}
+
+function nextRound() {
+  if (roundNum >= TOTAL) { showFinal(); return; }
+  current = pool[roundNum];
+  answered = false;
+  guessedMargin = 10;
+  document.getElementById('round-label').textContent = `Round ${roundNum + 1} of ${TOTAL}`;
+  document.getElementById('progress').style.width = `${(roundNum / TOTAL) * 100}%`;
+  renderRound();
+}
+
+function renderRound() {
+  const c = current;
+  const races = [
+    { name: "White", pct: c.white },
+    { name: "Hispanic", pct: c.hispanic },
+    { name: "Black", pct: c.black },
+    { name: "Asian", pct: c.asian },
+    { name: "Other", pct: c.other },
+  ].filter(r => r.pct > 0).sort((a,b) => b.pct - a.pct);
+
+  const raceRows = races.map(r => `
+    <div class="race-row">
+      <span class="race-name">${r.name}</span>
+      <div class="race-track"><div class="race-fill" style="width:${r.pct}%"></div></div>
+      <span class="race-pct">${r.pct}%</span>
+    </div>`).join('');
+
+  document.getElementById('game-area').innerHTML = `
+    <div class="card">
+      <div class="place-name">${c.name}</div>
+      <div class="place-state">${c.state}</div>
+      <div class="stats-grid">
+        <div class="stat">
+          <div class="stat-label">Population</div>
+          <div class="stat-val">${c.pop.toLocaleString()}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Urban</div>
+          <div class="stat-val">${c.urban}%</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Median household income</div>
+          <div class="stat-val">$${c.medIncome.toLocaleString()}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Per capita income</div>
+          <div class="stat-val">$${c.perCapita.toLocaleString()}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">College educated</div>
+          <div class="stat-val">${c.college}%</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Land area</div>
+          <div class="stat-val">${c.sqMiles.toLocaleString()} mi²</div>
+        </div>
+        <div class="stat wide">
+          <div class="stat-label">Racial composition</div>
+          <div class="race-bar-wrap">${raceRows}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="margin-section">
+      <div class="margin-header">
+        <span class="margin-label">Estimated winning margin</span>
+        <span class="margin-val" id="margin-disp">10 pts</span>
+      </div>
+      <input type="range" min="1" max="85" value="10" step="1" id="margin-slider">
+    </div>
+
+    <div class="choices">
+      <button class="choice-btn harris" id="btn-harris" onclick="guess('harris')">
+        Kamala Harris
+        <span class="party-label">Democrat</span>
+      </button>
+      <button class="choice-btn trump" id="btn-trump" onclick="guess('trump')">
+        Donald Trump
+        <span class="party-label">Republican</span>
+      </button>
+    </div>
+    <div id="result-area"></div>
+    <p class="hint-text">Pick the winner — bonus points for a close margin estimate</p>
+  `;
+
+  document.getElementById('margin-slider').addEventListener('input', function() {
+    guessedMargin = parseInt(this.value);
+    document.getElementById('margin-disp').textContent = `${guessedMargin} pts`;
+  });
+
+  fetchBlurb(c);
+}
+
+async function fetchBlurb(c) {
+  const prompt = `Write exactly 3 sentences describing ${c.name}, ${c.state} as a place — its landscape, economy, and the feel of everyday life there. Be specific and vivid. Do not mention politics, elections, parties, or voting. Do not quote census statistics directly.`;
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 160,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const text = (data.content || []).map(b => b.text || "").join("").trim();
+    const loadingEl = document.getElementById('blurb-loading');
+    const textEl = document.getElementById('blurb-text');
+    if (text && loadingEl && textEl) {
+      loadingEl.style.display = 'none';
+      textEl.textContent = text;
+      textEl.style.display = 'block';
+    }
+  } catch(e) {
+    const loadingEl = document.getElementById('blurb-loading');
+    if (loadingEl) loadingEl.style.display = 'none';
+  }
+}
+
+function guess(winner) {
+  if (answered) return;
+  answered = true;
+
+  const bh = document.getElementById('btn-harris');
+  const bt = document.getElementById('btn-trump');
+  bh.disabled = true; bt.disabled = true;
+
+  const correct = winner === current.winner;
+  const marginDiff = Math.abs(guessedMargin - current.margin);
+  let marginPts = marginDiff <= 3 ? 3 : marginDiff <= 8 ? 2 : marginDiff <= 15 ? 1 : 0;
+  let roundScore = 0;
+
+  if (correct) {
+    roundScore = 5 + marginPts;
+    correctCount++;
+    streak++;
+    if (streak > bestStreak) bestStreak = streak;
+    if (streak >= 3) roundScore += 2;
+  } else {
+    streak = 0;
+  }
+  score += roundScore;
+  updateScoreBar();
+
+  if (correct) {
+    if (winner === 'harris') bh.className = 'choice-btn correct-h';
+    else bt.className = 'choice-btn correct-t';
+  } else {
+    if (winner === 'harris') { bh.className = 'choice-btn wrong-h'; bt.className = 'choice-btn correct-t'; }
+    else { bt.className = 'choice-btn wrong-t'; bh.className = 'choice-btn correct-h'; }
+  }
+
+  const winnerName = current.winner === 'harris' ? 'Harris (D)' : 'Trump (R)';
+  const streakNote = streak >= 3 && correct ? ' · +2 streak bonus!' : '';
+  const marginNote = marginDiff === 0 ? 'Perfect margin call!' : marginDiff <= 3 ? `Margin within 3 pts (+3)` : marginDiff <= 8 ? `Margin within 8 pts (+2)` : marginDiff <= 15 ? `Margin within 15 pts (+1)` : `Actual margin: ${current.margin} pts`;
+
+  document.getElementById('result-area').innerHTML = `
+    <div class="result-box ${correct ? 'correct' : 'wrong'}">
+      <div class="result-headline">${correct ? '✓ Correct!' : '✗ Wrong.'} ${winnerName} won by ${current.margin} pts. +${roundScore} pts${streakNote}</div>
+      <div class="result-detail">${current.notes}. ${marginNote}.</div>
+    </div>
+    <button class="next-btn" onclick="advance()">${roundNum + 1 < TOTAL ? 'Next county →' : 'See final score →'}</button>
+  `;
+  roundNum++;
+}
+
+function advance() {
+  nextRound();
+}
+
+function showFinal() {
+  document.getElementById('round-label').textContent = 'Game over';
+  document.getElementById('progress').style.width = '100%';
+  const maxScore = TOTAL * 10;
+  const pct = score / maxScore;
+  let grade, comment;
+  if (pct >= 0.85) { grade = 'A'; comment = 'Psephologist-level intuition. You read the demographic tea leaves like a seasoned analyst.'; }
+  else if (pct >= 0.70) { grade = 'B'; comment = 'Strong showing. You understand the broad patterns that drove the 2024 result.'; }
+  else if (pct >= 0.55) { grade = 'C'; comment = 'Solid — but American political geography is full of surprises. 2024 especially.'; }
+  else if (pct >= 0.40) { grade = 'D'; comment = 'The income, education, and race story is more complicated than it looks. Keep digging.'; }
+  else { grade = 'F'; comment = "Demographics aren't destiny — 2024 proved it in a big way. Review the results and try again."; }
+
+  document.getElementById('game-area').innerHTML = `
+    <div class="final-wrap">
+      <div style="font-size:12px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-hint);font-weight:500;margin-bottom:6px;">Final score</div>
+      <div class="final-grade">${grade}</div>
+      <div class="final-score">${score} / ${maxScore} pts</div>
+      <div class="final-sub">${correctCount} of ${TOTAL} counties correct &middot; Best streak: ${bestStreak}</div>
+      <div class="final-comment">${comment}</div>
+      <button class="replay-btn" onclick="startGame()">Play again</button>
+    </div>
+  `;
+}
+
+startGame();
+</script>
+</body>
+</html>
